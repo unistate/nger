@@ -23,6 +23,14 @@ vue、react相继都有了小程序的开发框架，作为一个nger，也该�
   - [package.json 模块信息](./src/package.json)
 - [template 模板打包后存放目录](./template)
 
+## 命名规则
+
+- `**PropertyAst`是属性装饰器节点,对应的有`is**PropertyAst`方法
+- `**ClassAst`是类装饰器节点,对应的有`is**ClassAst`方法
+- `**MethodAst`是方法装饰器节点,对应的有`is**MethodAst`方法
+- `**ControllerAst`是构造装饰器节点,对应的有`is**ControllerAst`方法
+- `**Parameter`是方法参数装饰器节点,对应的有`is**ParameterAst`方法
+
 ## 开发进度
 
 ### [nger-cli](./packages/nger-cli)
