@@ -3,6 +3,9 @@
 vue、react相继都有了小程序的开发框架，作为一个nger，也该为社区做点事情了!
 很遗憾，由于ng和小程序的差异性，我们暂时没打算直接把ng项目转换成小程序，而是用ng的一套思想（`依赖注入`、`装饰器`等）来规范开发小程序!已达到一套代码多平台运行。
 
+## 设计总纲
+> 用装饰器实现应用跨平台，如Controller装饰器，在前端就是发送http请求，在后端就是响应http请求
+> 主要目标nger-compiler根据平台需求,选择性的去除或修改代码,nger-platform-*提供装饰器解析器。
 ## 目录规范
 - [addons 第三方插件目录](./addon)
 - [attachment 附件目录](./attachment)
@@ -63,14 +66,61 @@ vue、react相继都有了小程序的开发框架，作为一个nger，也该�
   - [x] [Self](https://www.angular.cn/api/core/Self)
   - [x] [Optional](https://www.angular.cn/api/core/Optional)
   - [x] [Attribute](https://www.angular.cn/api/core/Attribute)
-- [x] 新增装饰器
+- [x] [typeorm装饰器](https://github.com/typeorm/typeorm/blob/master/README-zh_CN.md)
+  - [x] entity
+    - [x] ChildEntity
+    - [x] Entity
+    - [x] TableInheritance
+  - [x] columns
+    - [x] Column
+    - [x] CreateDateColumn
+    - [x] ObjectIdColumn
+    - [x] PrimaryColumn
+    - [x] PrimaryGeneratedColumn
+    - [x] UpdateDateColumn
+    - [x] VersionColumn
+  - [x] listeners
+    - [x] AfterInsert
+    - [x] AfterLoad
+    - [x] AfterRemove
+    - [x] AfterUpdate
+    - [x] BeforeInsert
+    - [x] BeforeRemove
+    - [x] BeforeUpdate
+    - [x] EventSubscriber
+  - [x] relations
+    - [x] JoinColumn
+    - [x] JoinTable
+    - [x] ManyToMany
+    - [x] ManyToOne
+    - [x] OneToMany
+    - [x] OneToOne
+    - [x] RelationCount
+    - [x] RelationId
+  - [x] transaction
+    - [x] Transaction
+    - [x] TransactionManager
+    - [x] TransactionRepository
+  - [x] tree
+    - [x] Tree
+    - [x] TreeChildren
+    - [x] TreeLevelColumn
+    - [x] TreeParent
+  - [x] other
+    - [x] Check
+    - [x] EntityRepository
+    - [x] Exclusion
+    - [x] Generated
+    - [x] Unique
+- [x] nest装饰器
+  - [x] `Get` (可选)发送`get`请求
+  - [x] `Post` (可选)发送`post`请求
+  - [x] `Controller` (可选)Api层，用于后端
+- [x] 其他装饰器
   - [x] `Page` 页面
   - [x] `Command` (可选)命令行
   - [x] `Option` (可选)命令参数
   - [x] `It` (可选)单元测试
-  - [x] `Get` (可选)发送`get`请求
-  - [x] `Post` (可选)发送`post`请求
-  - [x] `Controller` (可选)Api层，用于后端
 - [x] 生命周期
   - [x] `OnInit`
   - [x] `DoCheck`
@@ -92,7 +142,47 @@ vue、react相继都有了小程序的开发框架，作为一个nger，也该�
 - [ ] 编译`html`生成`wxml`文件
 - [ ] 编译`scss`/`less`/`styl`生成`wxss`文件
 - [ ] 编译生成`js`文件
+
+## Controller
+> 客户端运行时需要编译器转码
+```ts
+import { Controller, Get, Post } from 'nger-core'
+@Controller({
+    path: '/'
+})
+export class IndexController {
+    info: any = {
+        username: 'nger',
+        age: 28
+    }
+    @Get()
+    userInfo() {
+        return this.info;
+    }
+    @Post()
+    setUserInfo(username: string, age: number) {
+        this.info = {
+            username,
+            age
+        }
+    }
+}
+// to
+import { Get, Post, Controller } from 'nger-core'
+@Controller({
+    path: '/'
+})
+export class NgerUserController {
+    @Get()
+    userInfo: () => Promise<any>;
+    @Post()
+    setUserInfo: (username: string, age: number) => Promise<any>;
+}
+```
+
+
 ### @Page
+
 // TODO
 ```ts
 @Page({
@@ -227,8 +317,6 @@ Component({
 ```ts
 
 ```
-
-
 
 
 ### [nger-platform-test](./packages/nger-platform-test)
