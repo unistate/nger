@@ -1,8 +1,2 @@
-<ng-template  wx:if="{{condiction}}"  >
-        
-        <ims-header   >
-             view
-
-        </ims-header>
-        
-        </ng-template>
+<view wx:if="{{condiction}}">1</view>
+<view wx:else>3</view> 

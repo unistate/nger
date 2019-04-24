@@ -6,6 +6,7 @@ export interface Type<T> extends Function {
 export function isType<T>(val: any): val is Type<T> {
     return typeof val === 'function';
 }
+
 export enum ChangeDetectionStrategy {
     OnPush = 0,
     Default = 1
@@ -37,65 +38,6 @@ export abstract class QueryList<T> {
     abstract destroy(): void;
 }
 
-
-export interface ValueSansProvider {
-    useValue: any;
-}
-export interface ValueProvider extends ValueSansProvider {
-    provide: any;
-    multi?: boolean;
-}
-export interface StaticClassSansProvider {
-    useClass: Type<any>;
-    deps: any[];
-}
-export interface StaticClassProvider extends StaticClassSansProvider {
-    provide: any;
-    multi?: boolean;
-}
-export interface ConstructorSansProvider {
-    deps?: any[];
-}
-export interface ConstructorProvider extends ConstructorSansProvider {
-    provide: Type<any>;
-    multi?: boolean;
-}
-export interface ExistingSansProvider {
-    useExisting: any;
-}
-export interface ExistingProvider extends ExistingSansProvider {
-    provide: any;
-    multi?: boolean;
-}
-export interface FactorySansProvider {
-    useFactory: Function;
-    deps?: any[];
-}
-export interface FactoryProvider extends FactorySansProvider {
-    provide: any;
-    multi?: boolean;
-}
-export declare type StaticProvider = ValueProvider | ExistingProvider | StaticClassProvider | ConstructorProvider | FactoryProvider | any[];
-export interface TypeProvider extends Type<any> { }
-export interface ClassSansProvider {
-    useClass: Type<any>;
-}
-export interface ClassProvider extends ClassSansProvider {
-    provide: any;
-    multi?: boolean;
-}
-export declare type Provider = TypeProvider | ValueProvider | ClassProvider | ConstructorProvider | ExistingProvider | FactoryProvider | any[];
-
-export interface ModuleWithProviders<T = any> {
-    ngModule: Type<T>;
-    providers?: Provider[];
-}
-
-export interface SchemaMetadata {
-    name: string;
-}
-
-
 export type UrlMatcher = (
     segments: UrlSegment[],
     group: UrlSegmentGroup,
@@ -114,9 +56,9 @@ export type ResolveData = {
     [name: string]: any;
 };
 export type Routes = Route[];
-export declare type LoadChildrenCallback = () => Type<any> | Promise<Type<any>> | Observable<Type<any>>;
+export type LoadChildrenCallback = () => Type<any> | Promise<Type<any>> | Observable<Type<any>>;
 export type LoadChildren = string | LoadChildrenCallback;
-export declare type Params = {
+export type Params = {
     [key: string]: any;
 };
 export abstract class ActivatedRouteSnapshot {
@@ -137,7 +79,7 @@ export abstract class ActivatedRouteSnapshot {
     readonly queryParamMap: ParamMap;
     abstract toString(): string;
 }
-export declare type RunGuardsAndResolvers = 'pathParamsChange' | 'pathParamsOrQueryParamsChange' | 'paramsChange' | 'paramsOrQueryParamsChange' | 'always' | ((from: ActivatedRouteSnapshot, to: ActivatedRouteSnapshot) => boolean);
+export type RunGuardsAndResolvers = 'pathParamsChange' | 'pathParamsOrQueryParamsChange' | 'paramsChange' | 'paramsOrQueryParamsChange' | 'always' | ((from: ActivatedRouteSnapshot, to: ActivatedRouteSnapshot) => boolean);
 
 export interface Route {
     path?: string;
