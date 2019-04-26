@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Inject, EntityRepository, It } from 'nger-core'
+import { Controller, Get, Post, Inject, GetProperty, It } from 'nger-core'
 import { Logger } from 'nger-logger'
 import { ImsDemoEntity } from '../typeorm'
 @Controller({
@@ -8,12 +8,20 @@ export class HomeController {
 
     @Inject() public logger: Logger
 
-    @EntityRepository(ImsDemoEntity)
-    demo: EntityRepository<ImsDemoEntity>;
+    // @EntityRepository(ImsDemoEntity)
+    // demo: EntityRepository<ImsDemoEntity>;
 
     info: any = {
         username: 'nger',
         age: 28
+    }
+
+    @Get('http://www.baidu.com')
+    getBaidu: GetProperty<any>;
+
+    @Get('baidu')
+    baidu() {
+        return this.getBaidu();
     }
 
     constructor() { }
@@ -25,7 +33,7 @@ export class HomeController {
     @Get()
     userInfo() {
         this.logger.debug(`i am a injector logger!`)
-        return this.demo.find();
+        // return this.demo.find();
     }
 
     @Post()

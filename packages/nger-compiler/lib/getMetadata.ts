@@ -1,7 +1,7 @@
 import { MetadataCollector } from '@angular/compiler-cli/src/metadata/collector'
 import ts from 'typescript'
 const root = process.cwd();
-import { join } from 'path'
+import { join, dirname } from 'path'
 const tsconfig = require(join(root, 'tsconfig.json'))
 export {
     ModuleMetadata, isModuleMetadata, MetadataEntry,
@@ -32,7 +32,8 @@ export function getMetadata(file: string): ModuleMetadata | undefined {
 
 export function getNgModuleMetadata(modulePath: string): NgModuleOptions | undefined {
     const metadata = getMetadata(modulePath);
-    let ngModuleDef: NgModuleOptions | undefined = undefined;
+    const dir = dirname(modulePath)
+    let ngModuleDef: any = {};
     if (isModuleMetadata(metadata)) {
         const metadataMap = metadata.metadata;
         Object.keys(metadataMap).map((className: string) => {
@@ -47,8 +48,27 @@ export function getNgModuleMetadata(modulePath: string): NgModuleOptions | undef
                                 const { name, module } = expression;
                                 if (name === "NgModule" && module === "nger-core") {
                                     _arguments && _arguments.map((arg) => {
-                                        debugger;
+                                        if (arg) {
+                                            Object.keys(arg).map(key => {
+                                                const item = arg[key]
+                                                if (key === 'declarations') {
+                                                    // 是页面或组件或者Controller类的
+                                                }
+                                                item.map(it => {
+                                                    if (isMetadataImportedSymbolReferenceExpression(it)) {
+                                                        ngModuleDef[key] = {
+                                                            module: join(dir, it.module),
+                                                            name: it.name
+                                                        }
+                                                    } else {
+                                                        debugger;
+                                                    }
+                                                })
+                                            })
+                                        }
                                     })
+                                } else {
+                                    debugger;
                                 }
                             }
                         } else {
