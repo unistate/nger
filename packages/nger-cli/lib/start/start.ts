@@ -1,20 +1,22 @@
 import { TypeContext } from 'ims-decorator';
-import { ConsoleLogger, LogLevel } from 'nger-logger';
+import { Logger } from 'nger-logger';
 import { NgerPlatformExpress } from 'nger-platform-express'
 import { NgerPlatformKoa } from 'nger-platform-koa'
+import { Injectable, Inject } from 'nger-core';
 
-export class NgerStart {
-    logger: ConsoleLogger = new ConsoleLogger(LogLevel.debug);
+@Injectable()
+export class NgerCliStart {
+    @Inject() logger: Logger;
     /** express */
     express(context: TypeContext) {
-        new NgerPlatformExpress().run(context);
+        new NgerPlatformExpress().bootstrap(context);
     }
     /** koa */
     koa(context: TypeContext) {
-        new NgerPlatformKoa().run(context);
+        new NgerPlatformKoa().bootstrap(context);
     }
     /** hapi */
     async hapi(context: TypeContext) {
-        
+
     }
 }

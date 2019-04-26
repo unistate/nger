@@ -1,12 +1,12 @@
+import { ConsoleLogger, LogLevel, Logger } from 'nger-logger';
 import { stringify } from './util';
 import {
     Type, FactoryProvider, StaticClassProvider, ValueProvider,
     ExistingProvider, ConstructorProvider, isValueProvider,
     StaticProvider, isExistingProvider, isStaticClassProvider,
-    isFactoryProvider, ClassProvider, TypeProvider
+    isFactoryProvider
 } from './type'
 import { InjectionToken } from './injection_token';
-import { ConsoleLogger, LogLevel, Logger } from 'nger-logger';
 export const NG_TEMP_TOKEN_PATH = 'ngTempTokenPath';
 export const SOURCE = '__source';
 const NG_TOKEN_PATH = 'ngTokenPath';
@@ -48,7 +48,7 @@ export function inject<T>(token: any, notFound?: T, flags: InjectFlags = InjectF
             token,
             record,
             globalRecord,
-            Injector.NULL as Injector,
+            ERROR_INJECTOR,
             notFound,
             flags
         );
@@ -94,7 +94,7 @@ function tryResolveToken(
 
 
 export function createFactoryProviderRecord(val: FactoryProvider): Record {
-    return new Record(val.useFactory, createDependencyRecord(val.deps), undefined);
+    return new Record((...params: any[]) => val.useFactory(...params), createDependencyRecord(val.deps), undefined);
 }
 export function createStaticClassProviderRecord(val: StaticClassProvider): Record {
     return new Record((...params: any[]) => new val.useClass(...params), createDependencyRecord(val.deps), undefined)
@@ -178,34 +178,34 @@ export function createMultiRecord(res: Record | Record[] | undefined, newRecord:
     }
     return records;
 }
-export function createStaticRecrod(record: StaticProvider) {
+export function createStaticRecrod(record: StaticProvider, records: Map<any, Record | Record[]>) {
     if (isValueProvider(record)) {
         if (!!record.multi) {
-            return createMultiRecord(this.map.get(record.provide), createValueProviderRecord(record));
+            return createMultiRecord(records.get(record.provide), createValueProviderRecord(record));
         } else {
             return createValueProviderRecord(record)
         }
     } else if (isExistingProvider(record)) {
         if (!!record.multi) {
-            return createMultiRecord(this.map.get(record.provide), createExistingProviderRecord(record));
+            return createMultiRecord(records.get(record.provide), createExistingProviderRecord(record));
         } else {
             return createExistingProviderRecord(record)
         }
     } else if (isStaticClassProvider(record)) {
         if (!!record.multi) {
-            return createMultiRecord(this.map.get(record.provide), createStaticClassProviderRecord(record));
+            return createMultiRecord(records.get(record.provide), createStaticClassProviderRecord(record));
         } else {
             return createStaticClassProviderRecord(record)
         }
     } else if (isFactoryProvider(record)) {
         if (!!record.multi) {
-            return createMultiRecord(this.map.get(record.provide), createFactoryProviderRecord(record));
+            return createMultiRecord(records.get(record.provide), createFactoryProviderRecord(record));
         } else {
             return createFactoryProviderRecord(record)
         }
     } else {
         if (!!record.multi) {
-            return createMultiRecord(this.map.get(record.provide), createConstructorProvider(record));
+            return createMultiRecord(records.get(record.provide), createConstructorProvider(record));
         } else {
             return createConstructorProvider(record)
         }
@@ -249,6 +249,17 @@ export const topInjector = {
 export interface IInjector {
     get<T>(token: IToken<T>, notFound?: T, flags?: InjectFlags, ): T | T[] | undefined;
 }
+export class ErrorInjector implements IInjector {
+    get(token: any, notFoundValue: any = _THROW_IF_NOT_FOUND, flags: InjectFlags): any {
+        // 如果是Optional
+        if (notFoundValue === _THROW_IF_NOT_FOUND) {
+            const error = new Error(`NullInjectorError: No provider for ${stringify(token)}!`);
+            error.name = 'NullInjectorError';
+            throw error;
+        }
+        return notFoundValue;
+    }
+}
 // null
 export class NullInjector implements IInjector {
     get(token: any, notFoundValue: any = _THROW_IF_NOT_FOUND, flags: InjectFlags): any {
@@ -263,9 +274,15 @@ export class NullInjector implements IInjector {
     }
 }
 const NULL_INJECTOR = new NullInjector() as Injector;
+const ERROR_INJECTOR = new ErrorInjector() as Injector;
+
 
 export function catchInjectorError(
-    e: any, token: any, injectorErrorName: string, source: string | null): never {
+    e: any,
+    token: any,
+    injectorErrorName: string,
+    source: string | null
+): never {
     const tokenPath: any[] = e[NG_TEMP_TOKEN_PATH];
     if (token[SOURCE]) {
         tokenPath.unshift(token[SOURCE]);
@@ -275,25 +292,32 @@ export function catchInjectorError(
     e[NG_TEMP_TOKEN_PATH] = null;
     throw e;
 }
+
 export class Injector implements IInjector {
     static THROW_IF_NOT_FOUND = THROW_IF_NOT_FOUND;
     static NULL: IInjector = NULL_INJECTOR;
     _records: Map<any, Record | Record[]> = new Map();
     exports: Map<any, Record | Record[]> = new Map();
-    logger: ConsoleLogger = new ConsoleLogger(LogLevel.debug)
+    logger: Logger;
+    parent: Injector;
     constructor(
         records: StaticProvider[],
-        private parent: Injector = Injector.NULL as Injector,
+        parent: Injector | null = null,
         public source: string | null = null
     ) {
+        this.logger = inject(Logger, new ConsoleLogger(LogLevel.debug)) as Logger;
+        if (!parent) {
+            parent = Injector.NULL as Injector;
+        }
+        this.parent = parent;
         this._records.set(Injector, new Record(() => this, [], undefined));
         records.map(record => {
             // todo
-            this._records.set(record.provide, createStaticRecrod(record))
+            this._records.set(record.provide, createStaticRecrod(record, this._records))
         });
     }
-    create(records: StaticProvider[]) {
-        return new Injector(records, this)
+    create(records: StaticProvider[], source: string | null = null) {
+        return new Injector(records, this, source)
     }
     setExport(token: any) {
         const record = this._records.get(token);
@@ -301,12 +325,16 @@ export class Injector implements IInjector {
     }
     setStatic(records: StaticProvider[]) {
         records.map(record => {
-            this._records.set(record.provide, createStaticRecrod(record))
+            this._records.set(record.provide, createStaticRecrod(record, this._records))
         });
     }
     debug() {
         this._records.forEach((item, key) => {
-            this.logger.debug(`injector ${key.name} registed`)
+            if (Array.isArray(item)) {
+
+            } else {
+                this.logger.debug(`injector:${this.source} ${key.name} registed, Dependeny: ${stringify(item.deps.map(dep => dep.token))}`)
+            }
         });
     }
     set(token: any, record: Record | Record[]) {
@@ -329,22 +357,8 @@ export class Injector implements IInjector {
                 flags
             );
         } catch (e) {
-            return catchInjectorError(e, token, 'StaticInjectorError', this.source);
+            return catchInjectorError(e, token, `${this.source}:StaticInjectorError`, this.source);
         }
-    }
-}
-export function createTypeProviderRecord(val: TypeProvider): Record {
-    return {
-        fn: () => new val(),
-        deps: [],
-        value: undefined
-    }
-}
-export function createClassProviderRecord(val: ClassProvider): Record {
-    return {
-        fn: (...params: any[]) => new val.useClass(),
-        deps: [],
-        value: undefined
     }
 }
 function formatError(
@@ -385,7 +399,6 @@ export function resolveToken(
                 throw Error(NO_NEW_LINE + 'Circular dependency');
             } else if (value === EMPTY) {
                 record.value = CIRCULAR;
-                let obj = undefined;
                 let fn = record.fn;
                 let depRecords = record.deps;
                 let deps = EMPTY;
@@ -406,15 +419,16 @@ export function resolveToken(
                             records,
                             // If we don't know how to resolve dependency and we should not check parent for it,
                             // than pass in Null injector.
-                            !childRecord && !(options & OptionFlags.CheckParent) ? NULL_INJECTOR : parent,
+                            !childRecord && !(options & OptionFlags.CheckParent) ? ERROR_INJECTOR : parent,
                             options & OptionFlags.Optional ? null : Injector.THROW_IF_NOT_FOUND,
                             InjectFlags.Default));
                     }
                 }
-                value = fn.apply(obj, deps);
+                value = fn(...deps);
                 record.value = value;
                 return value;
             }
+            return value;
         }
         if (Array.isArray(record)) {
             value = record.map(rec => handler(rec))

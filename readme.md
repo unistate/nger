@@ -1,11 +1,29 @@
-## 用angular开发小程序
+<p align="center"><img width="120" src="./logo.png" alt="Vue logo"></p>
+
+<h2 align="center">用ng自由组合开发小程序</h2>
+
+> 项目名称意义，用ng的人！I am a nger! 
+
+<font color="green">Warning!</font> <font color="green">Warning!</font> <font color="green">Warning!</font> 这不仅仅是一个前端项目。
 
 vue、react相继都有了小程序的开发框架，作为一个nger，也该为社区做点事情了!
-很遗憾，由于ng和小程序的差异性，我们暂时没打算直接把ng项目转换成小程序，而是用ng的一套思想（`依赖注入`、`装饰器`等）来规范开发小程序!已达到一套代码多平台运行。
+很遗憾，由于ng和小程序的差异性，我们暂时没打算直接把ng项目转换成小程序，而是用ng的一套思想（`依赖注入`、`装饰器`等）来规范开发小程序!以达到一套代码多平台运行。
 
-## 设计总纲
+<h2 align="center">设计总纲</h2>
+
 > 用装饰器实现应用跨平台，如Controller装饰器，在前端就是发送http请求，在后端就是响应http请求
 > 主要目标nger-compiler根据平台需求,选择性的去除或修改代码,nger-platform-*提供装饰器解析器。
+> 将ng中的ngIf、ngFor通过编译器，拓展到其他运行环境，如小程序等。
+
+<h2 align="center">依赖环境</h2>
+
+1. [安装nodejs](https://nodejs.org/en/download/)
+2. [安装docker](https://www.docker.com/products/docker-desktop)
+3. [安装docker-compose](https://docs.docker.com/compose/install/)
+4. npm install
+5. docker-compose up -d
+6. npm run cli start koa
+
 ## 目录规范
 - [addons 第三方插件目录](./addon)
 - [attachment 附件目录](./attachment)
@@ -23,6 +41,8 @@ vue、react相继都有了小程序的开发框架，作为一个nger，也该�
   - [package.json 模块信息](./src/package.json)
 - [template 模板打包后存放目录](./template)
 
+## 开发文档
+
 ## 命名规则
 
 - `**PropertyAst`是属性装饰器节点,对应的有`is**PropertyAst`方法
@@ -30,6 +50,9 @@ vue、react相继都有了小程序的开发框架，作为一个nger，也该�
 - `**MethodAst`是方法装饰器节点,对应的有`is**MethodAst`方法
 - `**ControllerAst`是构造装饰器节点,对应的有`is**ControllerAst`方法
 - `**Parameter`是方法参数装饰器节点,对应的有`is**ParameterAst`方法
+
+## 核心思想
+> ng的依赖注入
 
 ## 开发进度
 
@@ -47,7 +70,7 @@ vue、react相继都有了小程序的开发框架，作为一个nger，也该�
   - [ ] android客户端 `yarn cli build android`
 - [ ] 初始化 `yarn cli init demo`
 - [ ] `yarn cli init`初始化
-- [ ] `yarn cli test`单元测试
+- [x] `yarn cli test`单元测试
 - [x] `yarn cli start`启动服务
 - [ ] `yarn cli publish`发布到当前src模块应用商城
 
@@ -138,7 +161,12 @@ vue、react相继都有了小程序的开发框架，作为一个nger，也该�
   - [x] `AfterViewInit`
   - [x] `AfterViewChecked`
 
-### 任务安排
+## 生态
+| 模块及文档连接                                         | 作用       |
+|-------------------------------------------------|----------|
+| [nger-module-gulp](./packages/nger-module-gulp) | gulp打包相关 |
+
+## 任务安排
 > 开发重点 nger-compiler 到 nger-di
 > 目标src目录中的文件，编译到各个平台，并运行。
 
@@ -151,7 +179,9 @@ vue、react相继都有了小程序的开发框架，作为一个nger，也该�
 - [ ] 编译`scss`/`less`/`styl`生成`wxss`文件
 - [ ] 编译生成`js`文件
 
-## Controller
+## TODO
+
+### Controller
 > 客户端运行时需要编译器转码
 ```ts
 import { Controller, Get, Post } from 'nger-core'
